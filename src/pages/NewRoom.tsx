@@ -1,12 +1,36 @@
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import IllustrationSVG from "../assets/img/illustration.svg";
 import Logo from "../assets/img/logo.svg";
 import "../styles/auth.scss";
 import { Button } from "../components/Button";
-// import { useAuth } from "../hooks/useAuth";
+import { FormEvent, useState } from "react";
+import { database } from "../services/firebase";
+import { useAuth } from "../hooks/useAuth";
 
 export function NewRoom() {
-  // const { user } = useAuth();
+  const { user } = useAuth();
+  const history = useHistory();
+  const [newRoom, setNewRoom] = useState("");
+
+  async function handleCreateRoom(event: FormEvent) {
+    event.preventDefault();
+
+    //trim to remove blank spaces
+    if (newRoom.trim() === "") {
+      return;
+    }
+
+    //create table rooms on realtime database
+    const roomRef = database.ref("rooms");
+
+    //then push some object
+    const firebaseRoom = await roomRef.push({
+      title: newRoom,
+      authorId: user?.id,
+    });
+
+    history.push(`/rooms/${firebaseRoom.key}`);
+  }
 
   return (
     <div id="page-auth">
@@ -22,8 +46,12 @@ export function NewRoom() {
           <img src={Logo} alt="Logo Let me ask" />
 
           <h2>Criar uma nova sala</h2>
-          <form action="">
-            <input type="text" placeholder="Nome da sala" />
+          <form onSubmit={handleCreateRoom}>
+            <input
+              onChange={(e) => setNewRoom(e.target.value)}
+              type="text"
+              placeholder="Nome da sala"
+            />
             <Button type="submit">Criar sala</Button>
           </form>
           <p>
